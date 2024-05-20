@@ -1,25 +1,37 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import Modal from '/home/mashud/Django/penzifrontend/src/components/Modals.js';
 import './styles.css';
 
-const UserForm = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [message, setMessage] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+const UserForm = ({ onSuccess }) => {
+  const [formData, setFormData] = useState({
+    phoneNumber: '',
+    message: '',
+  });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       // Send a POST request to the backend endpoint
-      await axios.post('http://127.0.0.1:8000/message-receive/', {
-        phone_number: phoneNumber,
-        message: message,
+      const response_data = await axios.post('http://127.0.0.1:8000/message-receive/', {
+        phone_number: formData.phoneNumber,
+        message: formData.message,
       });
-      // Clear the form fields after successful submission
-      setPhoneNumber('');
-      setMessage('');
-      // Show success modal
-      setShowSuccessModal(true);
+      setModalMessage(response_data);  // Set response message
+      setModalOpen(true);
+      // Call onSuccess with the phone number to proceed to the next form
+      onSuccess(formData.phoneNumber);
     } catch (error) {
       console.error('Error registering user:', error);
       alert('Failed to register user. Please try again.');
@@ -34,39 +46,37 @@ const UserForm = () => {
         <input
           type="text"
           id="phoneNumber"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
         />
         <label htmlFor="message">Message: </label>
         <input
           type="text"
           id="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
         />
         <button type="submit">Add User</button>
       </form>
-      {showSuccessModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setShowSuccessModal(false)}>&times;</span>
-            <p>User registered successfully!</p>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
     </div>
   );
 };
 
-const RegistrationForm = () => {
+const RegistrationForm = ({ phoneNumber, onSuccess }) => {
   const [formData, setFormData] = useState({
+    phoneNumber: phoneNumber,
     name: '',
     age: '',
     gender: '',
     county: '',
     town: '',
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,20 +89,17 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      //concatenate the data into a string separated by #
+      // Concatenate the data into a string separated by #
       const concatenatedData1 = `start#${formData.name}#${formData.age}#${formData.gender}#${formData.county}#${formData.town}`;
       // Send a POST request to the backend endpoint with registration data
-      await axios.post('http://127.0.0.1:8000/message-receive/', concatenatedData1);
-      // Clear the form fields after successful submission
-      setFormData({
-        name: '',
-        age: '',
-        gender: '',
-        county: '',
-        town: '',
+      const response_data = await axios.post('http://127.0.0.1:8000/message-receive/', {
+        phone_number: formData.phoneNumber,
+        message: concatenatedData1,
       });
-      // Show success modal
-      setShowSuccessModal(true);
+      setModalMessage(response_data);  // Set response message
+      setModalOpen(true);
+      // Call onSuccess to proceed to the next form
+      onSuccess();
     } catch (error) {
       console.error('Error registering user:', error);
       alert('Failed to register user. Please try again.');
@@ -103,6 +110,14 @@ const RegistrationForm = () => {
     <div>
       <h2>Registration</h2>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="phoneNumber">Phone Number:</label>
+        <input
+          type="text"
+          id="phoneNumber"
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+        />
         <label htmlFor="name">Name:</label>
         <input
           type="text"
@@ -149,28 +164,23 @@ const RegistrationForm = () => {
         />
         <button type="submit">Register User</button>
       </form>
-      {showSuccessModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setShowSuccessModal(false)}>&times;</span>
-            <p>User registered successfully!</p>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
     </div>
   );
 };
 
-
-const DetailsForm = () => {
+const DetailsForm = ({ phoneNumber, onSuccess }) => {
   const [detailsData, setDetailsData] = useState({
+    phoneNumber: phoneNumber,
     level_of_education: '',
     profession: '',
     marital_status: '',
     religion: '',
     ethnicity: '',
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -183,20 +193,17 @@ const DetailsForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      //concatenate the data into a string separated by #
+      // Concatenate the data into a string separated by #
       const concatenatedData = `details#${detailsData.level_of_education}#${detailsData.profession}#${detailsData.marital_status}#${detailsData.religion}#${detailsData.ethnicity}`;
       // Send a POST request to the backend endpoint with details data
-      await axios.post('http://127.0.0.1:8000/message-receive/', concatenatedData);
-      // Clear the form fields after successful submission
-      setDetailsData({
-        level_of_education: '',
-        profession: '',
-        marital_status: '',
-        religion: '',
-        ethnicity: '',
+      const response_data = await axios.post('http://127.0.0.1:8000/message-receive/', {
+        phone_number: detailsData.phoneNumber,
+        message: concatenatedData,
       });
-      // Show success modal
-      setShowSuccessModal(true);
+      setModalMessage(response_data);  // Set response message
+      setModalOpen(true);
+      // Call onSuccess to proceed to the next form
+      onSuccess();
     } catch (error) {
       console.error('Error saving details:', error);
       alert('Failed to save details. Please try again.');
@@ -207,6 +214,14 @@ const DetailsForm = () => {
     <div>
       <h2>Details</h2>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="phoneNumber">Phone Number:</label>
+        <input
+          type="text"
+          id="phoneNumber"
+          name="phoneNumber"
+          value={detailsData.phoneNumber}
+          onChange={handleChange}
+        />
         <label htmlFor="level_of_education">Level of Education:</label>
         <input
           type="text"
@@ -249,35 +264,106 @@ const DetailsForm = () => {
         />
         <button type="submit">Save Details</button>
       </form>
-      {showSuccessModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => setShowSuccessModal(false)}>&times;</span>
-            <p>Details saved successfully!</p>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
     </div>
   );
 };
 
-const DescriptionForm = () => {
-  // Add description form fields and logic here
+const DescriptionForm = ({ phoneNumber, onSuccess }) => {
+  const [descriptionData, setDescriptionData] = useState({
+    phoneNumber: phoneNumber,
+    description: '',
+  });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setDescriptionData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Concatenate the data into a string separated by #
+      const concatenatedData = `description#${descriptionData.description}`;
+      // Send a POST request to the backend endpoint with description data
+      const response = await axios.post('http://127.0.0.1:8000/message-receive/', {
+        phone_number: descriptionData.phoneNumber,
+        message: concatenatedData,
+      });
+      setModalMessage(response.data);  // Set response message
+      setModalOpen(true);
+      // Clear the form fields after successful submission
+      setDescriptionData({
+        phoneNumber: descriptionData.phoneNumber,
+        description: '',
+      });
+      // Call onSuccess to proceed to the next form (if needed)
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving description:', error);
+      alert('Failed to save description. Please try again.');
+    }
+  };
+
+  return (
+    <div>
+      <h2>Description</h2>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="phoneNumber">Phone Number:</label>
+        <input
+          type="text"
+          id="phoneNumber"
+          name="phoneNumber"
+          value={descriptionData.phoneNumber}
+          onChange={handleChange}
+        />
+        <label htmlFor="description">Description:</label>
+        <textarea
+          id="description"
+          name="description"
+          value={descriptionData.description}
+          onChange={handleChange}
+        />
+        <button type="submit">Save Description</button>
+      </form>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
+    </div>
+  );
 };
 
 const Penzi = () => {
   const [activeTab, setActiveTab] = useState('activation');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  const handleActivationSuccess = (phoneNumber) => {
+    setPhoneNumber(phoneNumber);
+    setActiveTab('registration');
+  };
+
+  const handleRegistrationSuccess = () => {
+    setActiveTab('details');
+  };
+
+  const handleDetailsSuccess = () => {
+    setActiveTab('description');
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'activation':
-        return <UserForm />;
+        return <UserForm onSuccess={handleActivationSuccess} />;
       case 'registration':
-        return <RegistrationForm />;
+        return <RegistrationForm phoneNumber={phoneNumber} onSuccess={handleRegistrationSuccess} />;
       case 'details':
-        return <DetailsForm />;
+        return <DetailsForm phoneNumber={phoneNumber} onSuccess={handleDetailsSuccess} />;
       case 'description':
-        return <DescriptionForm />;
+        return <DescriptionForm phoneNumber={phoneNumber} onSuccess={() => { }} />;
       default:
         return null;
     }
@@ -291,11 +377,9 @@ const Penzi = () => {
         <button onClick={() => setActiveTab('details')}>Details</button>
         <button onClick={() => setActiveTab('description')}>Description</button>
       </nav>
-      <div className="tab-content">{renderTabContent()}</div>
+      {renderTabContent()}
     </div>
   );
 };
 
 export default Penzi;
-
-
